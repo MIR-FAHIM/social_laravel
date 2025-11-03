@@ -33,7 +33,7 @@ class CommentController extends Controller
             'post_content_id' => 'required|exists:contents,id',  // Assuming the content table is 'contents'
             'comment' => 'required|string',
             'comment_type' => 'required|in:comment,debate',
-            'color' => 'nullable|in:green,blue',
+            'color' => 'nullable|in:green,red',
             'status' => 'required|in:approved,pending,rejected',
         ]);
 
