@@ -17,7 +17,7 @@ use App\Http\Controllers\HarmonyOfLifeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ContentLikeController;
 use App\Http\Controllers\FriendRequestController;
-
+use App\Http\Controllers\BadgesController;
 // --------------- User Authentication Module ---------------
 
 // User signup route
@@ -168,3 +168,14 @@ Route::post('/upload-profile-images', [ProfileImageController::class, 'uploadPro
 Route::get('/profile-images', [ProfileImageController::class, 'getProfileImages']);
 Route::post('/update-image-order', [ProfileImageController::class, 'updateImageOrder']);
 Route::delete('/delete-profile-image', [ProfileImageController::class, 'deleteProfileImage']);
+
+
+
+
+Route::prefix('badges')->group(function () {
+    Route::get('/get-badges', [BadgesController::class, 'index']);
+    Route::post('/add-badge', [BadgesController::class, 'store']);
+    Route::get('/show-badge/{id}', [BadgesController::class, 'show']);
+    Route::post('/update/{id}', [BadgesController::class, 'update']); // or use PUT/PATCH
+    Route::delete('delete/{id}', [BadgesController::class, 'destroy']);
+});
