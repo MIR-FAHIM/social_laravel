@@ -25,14 +25,15 @@ class BadgesController extends Controller
     /**
      * Store a newly created badge in storage (with icon upload).
      */
-    public function store(Request $request)
-    {
+public function store(Request $request)
+{
+    try {
         $validator = Validator::make($request->all(), [
             'name'        => 'required|string|max:255|unique:badges,name',
             'role'        => 'required|string|max:255',
             'power'       => 'nullable|string',
             'limitation'  => 'nullable|string',
-            'is_active'   => 'boolean',
+            'is_active'   => 'nullable|boolean',
             'count'       => 'integer|min:0',
             'rules'       => 'nullable|array',
             'tips'        => 'nullable|array',
@@ -49,9 +50,18 @@ class BadgesController extends Controller
         // Handle icon upload
         $iconPath = null;
         if ($request->hasFile('icon')) {
-            $file = $request->file('icon');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $iconPath = $file->storeAs('badges', $filename, 'public'); // stored in storage/app/public/badges
+            try {
+                $file = $request->file('icon');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $iconPath = $file->storeAs('badges', $filename, 'public');
+            } catch (\Exception $e) {
+               
+                return response()->json([
+                    'status' => 500,
+                    'message' => 'Icon upload failed. Please try again.',
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
         }
 
         $badge = Badges::create([
@@ -71,7 +81,29 @@ class BadgesController extends Controller
             'message' => 'Badge created successfully.',
             'data' => $badge,
         ], 201);
+
+    } catch (\Illuminate\Database\QueryException $dbEx) {
+        // Handles database errors (e.g., duplicate key, constraint failure)
+     
+
+        return response()->json([
+            'status' => 500,
+            'message' => 'Database error occurred while creating badge.',
+            'error' => $dbEx->getMessage(),
+        ], 500);
+
+    } catch (\Exception $e) {
+        // Catch-all for any other unexpected errors
+     
+
+        return response()->json([
+            'status' => 500,
+            'message' => 'An unexpected error occurred while creating the badge.',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
     /**
      * Display a single badge.
