@@ -20,7 +20,7 @@ return new class extends Migration
 
             // Badge progress & status
             $table->boolean('is_active')->default(true)->index(); // Whether the user currently holds the badge
-            $table->unsignedDecimal('percentage', 5, 2)->default(0); // Progress toward earning (0–100)
+            $table->decimal('percentage', 5, 2)->default(0); // Progress toward earning (0–100)
             $table->unsignedInteger('count')->default(0); // How many times earned / used
             $table->text('note')->nullable(); // Optional note or moderator comment
 
