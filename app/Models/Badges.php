@@ -11,7 +11,7 @@ class Badges extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'name', 'role', 'icon', 'power', 'limitation',
+        'name', 'slug', 'role', 'icon', 'power', 'limitation',
         'is_active', 'count', 'rules', 'tips',
     ];
 
