@@ -66,6 +66,7 @@ public function store(Request $request)
 
         $badge = Badges::create([
             'name'        => $request->name,
+            'slug'        => $request->slug,
             'role'        => $request->role,
             'power'       => $request->power,
             'limitation'  => $request->limitation,
