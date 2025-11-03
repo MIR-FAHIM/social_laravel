@@ -175,6 +175,7 @@ Route::delete('/delete-profile-image', [ProfileImageController::class, 'deletePr
 Route::prefix('badges')->group(function () {
     Route::get('/get-badges', [BadgesController::class, 'index']);
     Route::post('/add-badge', [BadgesController::class, 'store']);
+    Route::post('/by-user', [BadgesController::class, 'listByUser']);
     Route::get('/show-badge/{id}', [BadgesController::class, 'show']);
     Route::post('/update/{id}', [BadgesController::class, 'update']); // or use PUT/PATCH
     Route::delete('delete/{id}', [BadgesController::class, 'destroy']);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Badges;
+use App\Models\BadgesGain;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -20,6 +21,52 @@ class BadgesController extends Controller
             'status' => 200,
             'data' => $badges,
         ]);
+    }
+ public function listByUser(Request $request)
+    {
+        try {
+            // Validate input
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|exists:users,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 422,
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $userId = $request->input('user_id');
+
+            // 1️⃣ Get all badges
+            $badges = Badges::orderBy('name')->get();
+
+            // 2️⃣ Get badge_ids the user has achieved
+            $userBadgeIds = BadgesGain::where('user_id', $userId)
+                ->pluck('badge_id')
+                ->toArray();
+
+            // 3️⃣ Append is_achieved field to each badge
+            $badgesWithStatus = $badges->map(function ($badge) use ($userBadgeIds) {
+                $badge->is_achieved = in_array($badge->id, $userBadgeIds);
+                return $badge;
+            });
+
+            // 4️⃣ Return response
+            return response()->json([
+                'status'  => 200,
+                'message' => 'Badges fetched successfully.',
+                'data'    => $badgesWithStatus,
+            ], 200);
+
+        } catch (\Exception  $e) {
+            return response()->json([
+                'status'  => 500,
+                'message' => 'Failed to fetch badges.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
