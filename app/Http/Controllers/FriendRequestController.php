@@ -280,58 +280,116 @@ public function findFriends(Request $request)
 }
 public function recommendFriends(Request $request)
 {
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+    ]);
+
     try {
-        $user_id = $request->input('user_id'); // The requesting user’s ID
+        $userId = (int) $request->input('user_id');
 
-        // Validate input
-        $request->validate([
-            'user_id' => 'required|exists:users,id'
-        ]);
+        // 1) Current friends of the user (pluck only the other side)
+        $friends = Friendship::query()
+            ->where(function ($q) use ($userId) {
+                $q->where('sender_id', $userId)
+                  ->orWhere('receiver_id', $userId);
+            })
+            ->get()
+            ->map(function ($f) use ($userId) {
+                return $f->sender_id == $userId ? $f->receiver_id : $f->sender_id;
+            })
+            ->unique()
+            ->values();
 
-        // Fetch friends of the requesting user
-        $friends = Friendship::where(function ($query) use ($user_id) {
-            $query->where('sender_id', $user_id)
-                  ->orWhere('receiver_id', $user_id);
-        })->get()->map(function ($friendship) use ($user_id) {
-            return $friendship->sender_id == $user_id ? $friendship->receiver_id : $friendship->sender_id;
-        })->unique()->toArray();
+        // Early out: if user has no friends, you might recommend popular/nearby users instead.
+        // For now we’ll still try friends-of-friends; result may be empty.
+        $friendIds = $friends->all();
 
-        // Fetch mutual friends (friends of friends) who are not yet friends with the requesting user
-        $mutualFriends = Friendship::where(function ($query) use ($friends) {
-            $query->whereIn('sender_id', $friends)
-                  ->orWhereIn('receiver_id', $friends);
-        })->get()->map(function ($friendship) use ($friends, $user_id) {
-            $potential_friend_id = $friendship->sender_id == $user_id ? $friendship->receiver_id : $friendship->sender_id;
+        // 2) Edges that touch any of my friends
+        $fofEdges = Friendship::query()
+            ->where(function ($q) use ($friendIds) {
+                $q->whereIn('sender_id', $friendIds)
+                  ->orWhereIn('receiver_id', $friendIds);
+            })
+            ->get();
 
-            // Exclude user's existing friends and the user themselves
-            if (!in_array($potential_friend_id, $friends) && $potential_friend_id != $user_id) {
-                return $potential_friend_id;
-            }
-            return null;
-        })->filter()->unique()->take(15);
+        // 3) Reduce edges to candidate IDs (the “other endpoint”), exclude me and my current friends
+        $candidates = $fofEdges->map(function ($f) use ($userId) {
+                // Pick the "other" node with respect to neither being $userId necessarily
+                // We’ll normalize below anyway; this map just collects both ends.
+                return [$f->sender_id, $f->receiver_id];
+            })
+            ->flatten()
+            ->reject(function ($id) use ($userId, $friendIds) {
+                return $id == $userId || in_array($id, $friendIds, true);
+            });
 
-        // Retrieve user details for mutual friends
-        $result = User::whereIn('id', $mutualFriends)->get()->map(function ($user) {
+
+        $ranked = $candidates->countBy()->sortDesc();
+
+        // Top 15 candidate user IDs by mutual-count
+        $candidateIds = $ranked->keys()->take(15)->values();
+
+        if ($candidateIds->isEmpty()) {
+            return response()->json([
+                'status'  => 200,
+                'data'    => [],
+                'message' => 'No recommendations at this time',
+            ], 200);
+        }
+
+        // 5) Fetch pending friend-requests between me and candidates (either direction)
+        $pendingRequests = FriendRequest::query()
+            ->where('status', 'pending')
+            ->where(function ($q) use ($userId, $candidateIds) {
+                $q->where(function ($q2) use ($userId, $candidateIds) {
+                    $q2->where('sender_id', $userId)
+                       ->whereIn('receiver_id', $candidateIds);
+                })->orWhere(function ($q2) use ($userId, $candidateIds) {
+                    $q2->whereIn('sender_id', $candidateIds)
+                       ->where('receiver_id', $userId);
+                });
+            })
+            ->get();
+
+        // Build a quick lookup: candidateId => true if there’s a pending request either way
+        $isRequestedMap = [];
+        foreach ($pendingRequests as $r) {
+            $otherId = $r->sender_id == $userId ? $r->receiver_id : $r->sender_id;
+            $isRequestedMap[$otherId] = true;
+        }
+
+        // 6) Pull user profiles in one shot
+        $users = User::query()
+            ->whereIn('id', $candidateIds)
+            ->get()
+            // preserve the ranking order (sort by mutual-count desc using $ranked)
+            ->sortByDesc(fn ($u) => $ranked->get($u->id, 0))
+            ->values();
+
+        // 7) Build response
+        $result = $users->map(function (User $u) use ($isRequestedMap) {
             return [
-                'user_id' => $user->id,
-                'name' => $user->name,
-                'image' => $user->profile_photo_path,
-                'email' => $user->email,
-                'mobile' => $user->mobile,
-                'is_friend' => false // Not yet friends
+                'user_id'      => $u->id,
+                'name'         => $u->name,
+                'image'        => $u->profile_photo_path,
+                'email'        => $u->email,
+                'mobile'       => $u->mobile,
+                'is_friend'    => false,                              // by construction
+                'is_requested' => (bool)($isRequestedMap[$u->id] ?? false), // pending either direction
             ];
         });
 
         return response()->json([
-            'status' => 200,
-            'data' => $result,
-            'message' => 'Recommended friends found successfully'
+            'status'  => 200,
+            'data'    => $result,
+            'message' => 'Recommended friends found successfully',
         ], 200);
-    } catch (\Exception $e) {
+
+    } catch (\Throwable $e) {
         return response()->json([
-            'status' => 500,
+            'status'  => 500,
             'message' => 'An error occurred while recommending friends',
-            'error' => $e->getMessage()
+            'error'   => $e->getMessage(),
         ], 500);
     }
 }
