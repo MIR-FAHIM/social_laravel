@@ -32,6 +32,7 @@ public function store(Request $request)
             'name'        => 'required|string|max:255|unique:badges,name',
             'role'        => 'required|string|max:255',
             'power'       => 'nullable|string',
+            'slug'       => 'nullable|string',
             'limitation'  => 'nullable|string',
             'is_active'   => 'nullable|boolean',
             'count'       => 'integer|min:0',
