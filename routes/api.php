@@ -53,7 +53,7 @@ Route::post('/uploadContentImages', [ContentImagesController::class, 'uploadCont
 
 // Post content (may need authentication)
 Route::post('/post_content', [ContentController::class, 'postContent']);
-Route::post('/update-content', [ContentController::class, 'updateContent']);
+Route::post('/update-content/{id}', [ContentController::class, 'updateContent']);
 Route::post('/giveFireOnContent', [ContentController::class, 'giveFireOnContent']);
 Route::post('/updateAuthorWrittingStatus', [ContentController::class, 'updateAuthorWritingStatus']);
 
