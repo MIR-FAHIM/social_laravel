@@ -438,5 +438,101 @@ public function getCollectionByUser(Request $request)
         ], 500);
     }
 }
+  public function updateContent(Request $request, $id)
+    {
+      try {
+        // Validate only updatable fields; all are optional (partial update)
+        $validator = Validator::make($request->all(), [
+          'user_id'         => 'required|exists:users,id', // who is attempting the update
+          'text_content'    => 'nullable|string',
+          'text_title'      => 'nullable|string|max:255',
+          'text_url'        => 'nullable|string|max:1000',
+          'isGeneral'       => 'nullable|boolean',
+          'isDiscussion'    => 'nullable|boolean',
+          'isNews'          => 'nullable|boolean',
+          'isEducation'     => 'nullable|boolean',
+          'single_image'    => 'nullable|url',
+          'isFired'         => 'nullable|boolean',
+          'isBurnt'         => 'nullable|boolean',
+          'score'           => 'nullable|integer|min:0',
+          'view_count'      => 'nullable|integer|min:0',
+          'like_count'      => 'nullable|integer|min:0',
+          'comment_count'   => 'nullable|integer|min:0',
+          'is_authenticated'=> 'nullable|boolean',
+          'is_debate'       => 'nullable|boolean',
+        ]);
 
+        if ($validator->fails()) {
+          throw new ValidationException($validator);
+        }
+
+        // Load content or 404
+        $content = Content::findOrFail($id);
+
+        // Authorization: only owner can edit (tweak if you have roles)
+        $actorId = (int) $request->input('user_id');
+        if ((int) $content->user_id !== $actorId) {
+          return response()->json([
+            'status'  => 403,
+            'error'   => 'Forbidden',
+            'message' => 'You are not allowed to update this content.',
+          ], 403);
+        }
+
+        // Whitelist fields that can be updated
+        $updatable = [
+          'text_content','text_title','text_url',
+          'isGeneral','isDiscussion','isNews','isEducation',
+          'single_image','isFired','isBurnt','score',
+          'view_count','like_count','comment_count',
+          'is_authenticated','is_debate',
+        ];
+        $data = $request->only($updatable);
+
+        // Optional: normalize booleans (Laravel will cast if $casts set on model)
+        foreach (['isGeneral','isDiscussion','isNews','isEducation','isFired','isBurnt','is_authenticated','is_debate'] as $b) {
+          if ($request->has($b)) {
+            $data[$b] = filter_var($request->input($b), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+          }
+        }
+
+        DB::transaction(function () use ($content, $data) {
+          $content->fill($data);
+          $content->save();
+        });
+
+        // Return the updated record (fresh)
+        $content->refresh();
+
+        return response()->json([
+          'status'  => 200,
+          'message' => 'Content updated successfully',
+          'content' => $content,
+        ], 200);
+
+      } catch (ValidationException $e) {
+        return response()->json([
+          'status'  => 422,
+          'error'   => 'Validation failed',
+          'message' => $e->errors(),
+        ], 422);
+
+      } catch (ModelNotFoundException $e) {
+        return response()->json([
+          'status'  => 404,
+          'error'   => 'Not Found',
+          'message' => 'Content not found',
+        ], 404);
+
+      } catch (Exception $e) {
+        return response()->json([
+          'status'  => 500,
+          'error'   => 'An unexpected error occurred',
+          'message' => $e->getMessage(),
+        ], 500);
+      }
+    }
+
+
+    
 }
