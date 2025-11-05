@@ -3,6 +3,7 @@
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\UserSignupController;
 use App\Http\Controllers\ContentImagesController;
+use App\Http\Controllers\AddFlagOnContentController;
 use App\Http\Controllers\UserLoginController;
 use App\Http\Controllers\LifeEventController;
 use Illuminate\Http\Request;
@@ -187,4 +188,5 @@ Route::prefix('badges')->group(function () {
 
 
 Route::post('/content-flags/add', [ContentFlagController::class, 'addContentFlag']);
+Route::get('/add-flag-on-content', [AddFlagOnContentController::class, 'addFlagOnContent']);
 Route::get('/content-flags/get', [ContentFlagController::class, 'getContentFlag']);
