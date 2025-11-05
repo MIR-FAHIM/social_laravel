@@ -16,6 +16,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\HarmonyOfLifeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ContentLikeController;
+use App\Http\Controllers\ContentFlagController;
 use App\Http\Controllers\FriendRequestController;
 use App\Http\Controllers\BadgesController;
 // --------------- User Authentication Module ---------------
@@ -181,3 +182,9 @@ Route::prefix('badges')->group(function () {
     Route::post('/update/{id}', [BadgesController::class, 'update']); // or use PUT/PATCH
     Route::delete('delete/{id}', [BadgesController::class, 'destroy']);
 });
+
+
+
+
+Route::post('/content-flags/add', [ContentFlagController::class, 'addContentFlag']);
+Route::get('/content-flags/get', [ContentFlagController::class, 'getContentFlag']);
