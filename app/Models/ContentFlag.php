@@ -15,6 +15,7 @@ class ContentFlag extends Model
         'flag_name',
         'note',
         'score',
+        'is_positive',
         'icon',
         'is_active',
     ];

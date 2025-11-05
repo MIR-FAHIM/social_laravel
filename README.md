@@ -72,11 +72,11 @@ SHOW TABLES;
 DROP TABLE content_images;
 USE database_name;
 DESCRIBE content_images;
-php artisan make:model ContentFlag -m  
+php artisan make:model AddFlagOnContent -m  
 php artisan make:migration UserReview
 php artisan route:list
 php artisan route:clear
-php artisan make:controller ContentFlagController --resource
+php artisan make:controller AddFlagOnContentController --resource
 php artisan make:model DonationProjectImage -m //table and model
 // change a parameter type 
 ALTER TABLE transactions MODIFY COLUMN user_name DOUBLE(10, 2); //INT,VARCHAR(255), DOUBLE

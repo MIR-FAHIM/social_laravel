@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('flag_name')->unique(); // name of the flag, e.g. “Spam”, “Violence”
             $table->text('note')->nullable();      // description or moderation note
             $table->integer('score')->default(0);  // numeric impact or weight
+            $table->integer('is_positive')->default(0);  // numeric impact or weight
             $table->string('icon')->nullable();    // path or icon name
             $table->boolean('is_active')->default(true); // status toggle
 

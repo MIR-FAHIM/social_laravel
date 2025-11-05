@@ -20,6 +20,7 @@ class ContentFlagController extends Controller
                 'flag_name' => 'required|string|max:255|unique:content_flags,flag_name',
                 'note'      => 'nullable|string',
                 'score'     => 'nullable|integer',
+                'is_positive'     => 'nullable|integer',
                 'icon'      => 'nullable|file|mimes:jpg,jpeg,png,svg,webp|max:2048',
                 'is_active' => 'nullable|boolean|default:true',
             ]);
