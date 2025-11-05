@@ -5,14 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\ContentFlag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class ContentFlagController extends Controller
 {
-    /**
-     * Store a newly created Content Flag.
-     */
+
     public function addContentFlag(Request $request)
     {
         try {
@@ -61,10 +58,6 @@ class ContentFlagController extends Controller
             ], 500);
         }
     }
-
-    /**
-     * Get all content flags.
-     */
     public function getContentFlag()
     {
         try {

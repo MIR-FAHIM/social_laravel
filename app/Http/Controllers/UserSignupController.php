@@ -31,6 +31,8 @@ class UserSignupController extends Controller
             // Set default values for other fields if needed
         ]);
 
-        return response()->json(['message' => 'User registered successfully', 'user' => $user], 201);
+        return response()->json([
+            'status' =>200,
+            'message' => 'User registered successfully', 'user' => $user], 201);
     }
 }
