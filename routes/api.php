@@ -188,5 +188,5 @@ Route::prefix('badges')->group(function () {
 
 
 Route::post('/content-flags/add', [ContentFlagController::class, 'addContentFlag']);
-Route::get('/add-flag-on-content', [AddFlagOnContentController::class, 'addFlagOnContent']);
+Route::post('/add-flag-on-content', [AddFlagOnContentController::class, 'addFlagOnContent']);
 Route::get('/content-flags/get', [ContentFlagController::class, 'getContentFlag']);
