@@ -45,7 +45,7 @@ public function uploadProfileImages(Request $request)
        ProfileImage::create([
             'user_id'    => $user_id,
             'image_path' => $path,
-            'default'    => $request->is_default ?? 0,
+            'is_default'    => $request->is_default ?? 0,
             'serial'     => $existingImagesCount + $index + 1,
         ]);
     }
