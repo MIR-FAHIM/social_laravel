@@ -168,4 +168,58 @@ public function uploadProfileImages(Request $request)
             $image->save();
         }
     }
+
+
+
+
+    public function setDefaultProfileImage(Request $request)
+{
+    $request->validate([
+        'user_id'  => 'required|exists:users,id',
+        'image_id' => 'required|exists:profile_images,id',
+    ]);
+
+    try {
+        $userId  = (int) $request->user_id;
+        $imageId = (int) $request->image_id;
+
+        // Ensure the image belongs to the user
+        $image = ProfileImage::where('id', $imageId)
+            ->where('user_id', $userId)
+            ->firstOrFail();
+
+        // Reset all defaults for this user
+        ProfileImage::where('user_id', $userId)->update(['is_default' => 0]);
+
+        // Mark selected one as default
+        $image->is_default = 1;
+        $image->save();
+
+        // Update user's profile photo path
+        $user = User::findOrFail($userId);
+        $user->profile_photo_path = $image->image_path; // stored path from 'public' disk
+        $user->save();
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Default profile image updated.',
+            'data'    => [
+                'image_id' => $image->id,
+                'path'     => $image->image_path,
+            ],
+        ], 200);
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'status'  => 404,
+            'message' => 'Image not found for this user.',
+        ], 404);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status'  => 500,
+            'message' => 'Failed to set default profile image.',
+            'error'   => $e->getMessage(),
+        ], 500);
+    }
+}
 }

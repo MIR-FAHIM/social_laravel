@@ -168,6 +168,7 @@ Route::get('/user', function (Request $request) {
 
 // profile image
 Route::post('/upload-profile-images', [ProfileImageController::class, 'uploadProfileImages']);
+Route::post('/set-default-profile-images', [ProfileImageController::class, 'setDefaultProfileImage']);
 Route::post('/upload-single-profile-images', [UserController::class, 'uploadImage']);
 Route::get('/profile-images', [ProfileImageController::class, 'getProfileImages']);
 Route::post('/update-image-order', [ProfileImageController::class, 'updateImageOrder']);
