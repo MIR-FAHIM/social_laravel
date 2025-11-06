@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('serial')->nullable(); // Serial number can be updated, hence nullable
             $table->boolean('isPublic')->default(true); // Default is public
             $table->string('status')->default('active'); // For future usage
+            $table->integer('default')->default(0); // For future usage
             $table->timestamps();
             
             // Foreign key constraint

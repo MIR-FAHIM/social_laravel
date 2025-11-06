@@ -9,7 +9,7 @@ class ProfileImage extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'user_id', 'image_path', 'serial', 'isPublic', 'status'
+        'user_id', 'image_path', 'serial', 'isPublic', 'status', 'default'
     ];
     
     public function user()

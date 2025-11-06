@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ProfileImage;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
 class ProfileImageController extends Controller
@@ -10,39 +11,51 @@ class ProfileImageController extends Controller
     /**
      * Upload up to 5 profile images
      */
-    public function uploadProfileImages(Request $request)
-    {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'images' => 'required|array|max:5',  // Limit to 5 images
-            'images.*' => 'image|mimes:jpeg,png,jpg|max:2048',  // Validate images
-        ]);
+public function uploadProfileImages(Request $request)
+{
+    $request->validate([
+        'user_id'   => 'required|exists:users,id',
+        'images'    => 'required|array|max:5',  // Limit to 5 images
+        'images.*'  => 'image|mimes:jpeg,png,jpg|max:2048',  // Validate images
+    ]);
 
-        $user_id = $request->user_id; // Assuming user is authenticated
+    $user_id = $request->user_id;
+    $user = User::find($user_id);
 
-        // Get existing image count for the user
-        $existingImagesCount = ProfileImage::where('user_id', $user_id)->count();
+    // Ensure we have a name to work with
+    $userName = $user ? substr(preg_replace('/\s+/', '', strtolower($user->name)), 0, 4) : 'user';
 
-        if ($existingImagesCount + count($request->images) > 4) {
-            return response()->json(['error' => 'Cannot upload more than 4 images.'], 422);
-        }
+    // Count existing images
+    $existingImagesCount = ProfileImage::where('user_id', $user_id)->count();
 
-        foreach ($request->file('images') as $index => $image) {
-            // Save the image in storage
-            $path = $image->store('profile_images', 'public');
-
-            // Save image details in the database
-            ProfileImage::create([
-                'user_id' => $user_id,
-                'image_path' => $path,
-                'serial' => $existingImagesCount + $index + 1,  // Ensure order is continuous
-            ]);
-        }
-
-        return response()->json([
-            'status'=> 200,
-            'message' => 'Images uploaded successfully'], 200);
+    if ($existingImagesCount + count($request->images) > 4) {
+        return response()->json(['error' => 'Cannot upload more than 4 images.'], 422);
     }
+
+    foreach ($request->file('images') as $index => $image) {
+        // Generate custom filename
+        $random = str_pad(mt_rand(0, 99999), 5, '0', STR_PAD_LEFT);
+        $extension = $image->getClientOriginalExtension();
+        $fileName = "{$userName}_{$user_id}_{$random}.{$extension}";
+
+        // Save image in storage/app/public/profile_images
+        $path = $image->storeAs('profile_images', $fileName, 'public');
+
+        // Store record in DB
+       ProfileImage::create([
+            'user_id'    => $user_id,
+            'image_path' => $path,
+            'default'    => $request->is_default ?? 0,
+            'serial'     => $existingImagesCount + $index + 1,
+        ]);
+    }
+
+    return response()->json([
+        'status'  => 200,
+        'message' => 'Images uploaded successfully',
+    ], 200);
+}
+
 
     /**
      * Get the profile images in custom order
