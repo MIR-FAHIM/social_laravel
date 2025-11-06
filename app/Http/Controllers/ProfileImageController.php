@@ -40,7 +40,10 @@ public function uploadProfileImages(Request $request)
 
         // Save image in storage/app/public/profile_images
         $path = $image->storeAs('profile_images', $fileName, 'public');
-
+ if ($request-> is_default == 1) {
+        $user ->profile_photo_path = $path;
+        $user->save();
+    }
         // Store record in DB
        ProfileImage::create([
             'user_id'    => $user_id,
