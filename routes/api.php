@@ -20,6 +20,8 @@ use App\Http\Controllers\ContentLikeController;
 use App\Http\Controllers\ContentFlagController;
 use App\Http\Controllers\FriendRequestController;
 use App\Http\Controllers\BadgesController;
+use App\Http\Controllers\AnswersSkillController;
+use App\Http\Controllers\QuestionsSkillController;
 // --------------- User Authentication Module ---------------
 
 // User signup route
@@ -192,3 +194,22 @@ Route::prefix('badges')->group(function () {
 Route::post('/content-flags/add', [ContentFlagController::class, 'addContentFlag']);
 Route::post('/add-flag-on-content', [AddFlagOnContentController::class, 'addFlagOnContent']);
 Route::get('/content-flags/get', [ContentFlagController::class, 'getContentFlag']);
+
+
+
+Route::prefix('skill-connect')->group(function () {
+    Route::get('/fetch-questions', [QuestionsSkillController::class, 'index']);     // Get all questions
+    Route::get('/get-questions/{id}', [QuestionsSkillController::class, 'show']); // Get one question
+    Route::post('/store-questions', [QuestionsSkillController::class, 'store']);    // Add a question
+    Route::post('/update-questions/{id}', [QuestionsSkillController::class, 'update']); // Update
+    Route::get('/delete-questions/{id}', [QuestionsSkillController::class, 'destroy']); // Delete
+});
+
+
+
+
+Route::prefix('skill-connect')->group(function () {
+    Route::post('/add-answers', [AnswersSkillController::class, 'store']);      // Add answer
+    Route::post('/update-answers/{id}', [AnswersSkillController::class, 'update']); // Update answer
+    Route::get('/delete-answers/{id}', [AnswersSkillController::class, 'destroy']); // Delete answer
+});
