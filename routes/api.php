@@ -174,7 +174,7 @@ Route::post('/set-default-profile-images', [ProfileImageController::class, 'setD
 Route::post('/upload-single-profile-images', [UserController::class, 'uploadImage']);
 Route::get('/profile-images', [ProfileImageController::class, 'getProfileImages']);
 Route::post('/update-image-order', [ProfileImageController::class, 'updateImageOrder']);
-Route::delete('/delete-profile-image', [ProfileImageController::class, 'deleteProfileImage']);
+Route::get('/delete-profile-image', [ProfileImageController::class, 'deleteProfileImage']);
 
 
 
