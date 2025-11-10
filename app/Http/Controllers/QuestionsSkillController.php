@@ -52,7 +52,7 @@ class QuestionsSkillController extends Controller
         }
 
         try {
-            $question = QuestionsSkillConnect::addQuestion($request->all());
+            $question = QuestionsSkillConnect::create($request->all());
 
             return response()->json([
                 'success' => true,
