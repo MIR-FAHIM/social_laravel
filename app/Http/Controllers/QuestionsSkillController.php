@@ -134,4 +134,59 @@ class QuestionsSkillController extends Controller
             ], 500);
         }
     }
+
+
+
+      public function indexWithUserAnswers(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => ['required','integer'],
+        ]);
+
+        $userId = (int) $validated['user_id'];
+
+        // Fetch all active questions, ordered by global scope.
+        // Eager-load only this user's active answers for each question.
+        $questions = QuestionsSkillConnect::active()
+            ->with(['answers' => function ($q) use ($userId) {
+                $q->ofUser($userId)
+                  ->active()
+                  ->orderBy('id', 'asc');
+            }])
+            ->get([
+                'id',
+                'question',
+                'hint_answer',
+                'order',
+                'is_active',
+            ]);
+
+        // Shape the response
+        $data = $questions->map(function ($q) {
+            return [
+                'id'          => $q->id,
+                'question'    => $q->question,
+                'hint_answer' => $q->hint_answer,
+                'order'       => $q->order,
+                'answers'     => $q->answers->map(function ($a) {
+                    return [
+                        'id'         => $a->id,
+                        'user_id'    => $a->user_id,
+                        'answer'     => $a->answer,
+                        'is_bullet'  => (bool) $a->is_bullet,
+                        'type'       => $a->type,
+                        'is_active'  => (bool) $a->is_active,
+                        'created_at' => optional($a->created_at)->toISOString(),
+                        'updated_at' => optional($a->updated_at)->toISOString(),
+                    ];
+                })->values(),
+            ];
+        })->values();
+
+        return response()->json([
+            'status' => 200,
+            'data'   => $data,
+        ]);
+    }
+
 }

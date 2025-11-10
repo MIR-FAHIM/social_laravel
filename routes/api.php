@@ -203,6 +203,7 @@ Route::prefix('skill-connect')->group(function () {
     Route::post('/store-questions', [QuestionsSkillController::class, 'store']);    // Add a question
     Route::post('/update-questions/{id}', [QuestionsSkillController::class, 'update']); // Update
     Route::get('/delete-questions/{id}', [QuestionsSkillController::class, 'destroy']); // Delete
+    Route::get('/skill-questions', [QuestionsSkillController::class, 'indexWithUserAnswers']);
 });
 
 
