@@ -46,4 +46,11 @@ class QuestionsSkillConnect extends Model
     {
         return $query->where('is_active', true);
     }
+
+
+
+    public function answers()
+{
+    return $this->hasMany(AnswerSkillConnect::class, 'question_id');
+}
 }
