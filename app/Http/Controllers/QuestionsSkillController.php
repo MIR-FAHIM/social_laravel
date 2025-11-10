@@ -15,7 +15,7 @@ class QuestionsSkillController extends Controller
     {
         try {
             $onlyActive = $request->boolean('active', true);
-            $questions = QuestionsSkillConnect::getQuestions($onlyActive);
+            $questions = QuestionsSkillConnect::get();
 
             return response()->json([
                 'success' => true,
