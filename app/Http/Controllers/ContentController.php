@@ -101,7 +101,7 @@ class ContentController extends Controller
                 $totalAuthenticated = $authentications->count();
                 $averageScore = $totalAuthenticated > 0
                     ? round($authentications->avg('score'), 2)
-                    : 0;
+                    : 0.0;
 
                 // Add authenticate object to content
                 $item->authenticate = [
