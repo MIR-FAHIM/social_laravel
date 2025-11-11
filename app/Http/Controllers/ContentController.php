@@ -91,6 +91,23 @@ class ContentController extends Controller
             $content->getCollection()->transform(function ($item) use ($user_id) {
                 // Check if the current user has liked this content
                 $item->like_status = $item->likes->where('user_id', $user_id)->isNotEmpty();
+
+                                // Get authentication reactions for this content
+                $authentications = ContentReaction::where('content_id', $item->id)
+                    ->where('reaction_type', 'authenticate')
+                    ->get();
+
+                // Calculate total authenticated and average score
+                $totalAuthenticated = $authentications->count();
+                $averageScore = $totalAuthenticated > 0
+                    ? round($authentications->avg('score'), 2)
+                    : 0;
+
+                // Add authenticate object to content
+                $item->authenticate = [
+                    'total_authenticated' => $totalAuthenticated,
+                    'average_score' => $averageScore
+                ];
                 return $item;
             });
 
@@ -130,8 +147,7 @@ class ContentController extends Controller
                 // Check if the current user has liked this content
                 $item->like_status = $item->likes->where('user_id', $user_id)->isNotEmpty();
 
-                $item->like_status = $item->likes->where('user_id', $user_id)->isNotEmpty();
-
+              
                 // Get authentication reactions for this content
                 $authentications = ContentReaction::where('content_id', $item->id)
                     ->where('reaction_type', 'authenticate')
