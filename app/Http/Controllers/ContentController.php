@@ -540,57 +540,76 @@ class ContentController extends Controller
             // Validate request
             $validator = Validator::make($request->all(), [
                 'user_id' => 'required|exists:users,id',
+                'content_id' => 'required|exists:contents,id',
+                'score' => 'required|integer|min:0',
             ]);
 
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             }
 
-            // Fetch user and check if user is fireman
+            // Fetch user and check if user is guard
             $user = User::findOrFail($request->user_id);
 
             if (!$user->is_guard) {
                 return response()->json([
-                    'status' => 404,
+                    'status' => 403,
                     'error' => 'Unauthorized',
                     'message' => 'You do not have the guard privilege to authenticate content.'
-                ], 404);
+                ], 403);
             }
 
             // Fetch content
             $content = Content::findOrFail($request->content_id);
 
+            // Check if this user has already authenticated this content
+            $existingReaction = ContentReaction::where('user_id', $user->id)
+                ->where('content_id', $content->id)
+                ->where('reaction_type', 'authenticate')
+                ->first();
+
+            if ($existingReaction) {
+                // Update the score if already authenticated
+                $existingReaction->update([
+                    'score' => $request->input('score'),
+                ]);
+
+                return response()->json([
+                    'status' => 200,
+                    'message' => 'Authentication score updated successfully',
+                    'reaction' => $existingReaction
+                ], 200);
+            }
 
             // Log the reaction in content_reactions table
             $reaction = ContentReaction::create([
                 'user_id' => $user->id,
                 'content_id' => $content->id,
                 'reaction_type' => 'authenticate',
-                'score' => $request->input('score', 0),
-                'isComment' => false, // Assuming it's a direct content fire
+                'score' => $request->input('score'),
+                'isComment' => false,
             ]);
 
             // Send notification to the content user
             Notification::create([
                 'receiver_id' => $content->user_id,
                 'sender_id' => $request->user_id,
-                'title' => $user->name . ' fired your content',
-                'type' => 'fired',
+                'title' => $user->name . ' authenticated your content',
+                'type' => 'authenticated',
                 'body' => Str::limit($content->text_content, 20, '...'),
                 'is_read' => false,
                 'content_id' => $content->id,
                 'friend_req_id' => null,
             ]);
 
-            
             return response()->json([
                 'status' => 200,
-                'message' => 'Content has been authenticate successfully',
+                'message' => 'Content has been authenticated successfully',
                 'reaction' => $reaction
             ], 200);
         } catch (ValidationException $e) {
             return response()->json([
-                'status' => 404,
+                'status' => 422,
                 'error' => 'Validation failed',
                 'message' => $e->errors()
             ], 422);
