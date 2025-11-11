@@ -90,6 +90,7 @@ Route::get('/getcomments/{contentId}', [CommentController::class, 'getCommentsBy
 
 // Add content to a collection
 Route::post('/makeCollection', [ContentController::class, 'collectContent']);
+Route::post('/give-authenticity-score', [ContentController::class, 'giveAuthenticity']);
 
 // Get the user's content collection
 Route::get('/getCollection', [ContentController::class, 'getCollectionByUser']);
