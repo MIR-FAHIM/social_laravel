@@ -10,7 +10,7 @@ class ContentReaction extends Model
     use HasFactory;
     
         protected $fillable = [
-            'user_id', 'content_id', 'reaction_type', 'isComment'
+            'user_id', 'content_id', 'reaction_type', 'isComment' , 'score'
         ];
     
         // Relationships

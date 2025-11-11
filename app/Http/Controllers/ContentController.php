@@ -553,7 +553,7 @@ class ContentController extends Controller
                 return response()->json([
                     'status' => 404,
                     'error' => 'Unauthorized',
-                    'message' => 'You do not have the fireman privilege to authenticate content.'
+                    'message' => 'You do not have the guard privilege to authenticate content.'
                 ], 404);
             }
 

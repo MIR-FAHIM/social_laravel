@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('content_id');
             $table->string('reaction_type'); // For storing reaction like 'fire'
+            $table->integer('score'); // For storing reaction like 'fire'
             $table->boolean('isComment')->default(false);
             $table->timestamps();
 
