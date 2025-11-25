@@ -76,55 +76,29 @@ class ContentController extends Controller
         }
     }
 
-    public function getAllContent(Request $request)
-    {
-        try {
-            $user_id = $request->input('user_id'); // Ensure user_id is passed in the request
-            $perPage = $request->input('per_page', 15);
+public function getAllContent(Request $request)
+{
+    try {
+        $userId = $request->input('user_id'); // current viewer
+        $perPage = $request->input('per_page', 15);
 
-            // Get all content with user and check like status for the current user
-            $content = Content::with(['user', 'likes'])
-                ->orderBy('created_at', 'desc')
-                ->paginate($perPage);
+        $content = Content::with(['user', 'likes'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
 
-            // Add 'like_status' to each content item
-            $content->getCollection()->transform(function ($item) use ($user_id) {
-                // Check if the current user has liked this content
-                $item->like_status = $item->likes->where('user_id', $user_id)->isNotEmpty();
+        $content = $this->transformContentWithMeta($content, $userId);
 
-                                // Get authentication reactions for this content
-                $authentications = ContentReaction::where('content_id', $item->id)
-                    ->where('reaction_type', 'authenticate')
-                    ->get();
-
-                // Calculate total authenticated and average score
-                $totalAuthenticated = $authentications->count();
-                $averageScore = $totalAuthenticated > 0
-                    ? round($authentications->avg('score'), 2)
-                    : 0.0;
-
-                // Add authenticate object to content
-                $item->authenticate = [
-                    'total_authenticated' => $totalAuthenticated,
-                    'average_score' => $averageScore
-                ];
-                return $item;
-            });
-
-            return response()->json(
-                [
-                    "status" => 200,
-                    "data" => $content,
-                ],
-                200
-            );
-        } catch (Exception $e) {
-            return response()->json([
-                'error' => 'An unexpected error occurred',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            "status" => 200,
+            "data"   => $content,
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json([
+            'error'   => 'An unexpected error occurred',
+            'message' => $e->getMessage(),
+        ], 500);
     }
+}
 
     public function getAuthorWritingContent(Request $request)
     {
@@ -147,7 +121,7 @@ class ContentController extends Controller
                 // Check if the current user has liked this content
                 $item->like_status = $item->likes->where('user_id', $user_id)->isNotEmpty();
 
-              
+
                 // Get authentication reactions for this content
                 $authentications = ContentReaction::where('content_id', $item->id)
                     ->where('reaction_type', 'authenticate')
@@ -305,41 +279,59 @@ class ContentController extends Controller
         }
     }
 
-    public function getContentByUser(Request $request)
-    {
-        try {
-            $user_id = $request->input('user_id'); // Ensure user_id is passed in the request
-            $perPage = $request->input('per_page', 15);
+public function getContentByUser(Request $request)
+{
+    try {
+        $userId = $request->input('user_id');      // current viewer
+        $ownerId = $request->input('owner_id');    // whose content you are fetching (better to separate)
 
-            // Get all content with user and check like status for the current user
-            $content = Content::with(['user', 'likes'])
-                ->where('user_id', $request->user_id,)
-                ->orderBy('created_at', 'desc')
-                ->paginate($perPage);
+        $perPage = $request->input('per_page', 15);
 
-            // Add 'like_status' to each content item
-            $content->getCollection()->transform(function ($item) use ($user_id) {
-                // Check if the current user has liked this content
-                $item->like_status = $item->likes->where('user_id', $user_id)->isNotEmpty();
-                return $item;
-            });
+        $content = Content::with(['user', 'likes'])
+            ->where('user_id', $ownerId)          // previously: $request->user_id
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
 
-            return response()->json(
-                [
-                    "status" => 200,
-                    "data" => $content,
-                ],
-                200
-            );
-        } catch (Exception $e) {
-            return response()->json([
-                'error' => 'An unexpected error occurred',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        $content = $this->transformContentWithMeta($content, $userId);
+
+        return response()->json([
+            "status" => 200,
+            "data"   => $content,
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json([
+            'error'   => 'An unexpected error occurred',
+            'message' => $e->getMessage(),
+        ], 500);
     }
+}
 
+private function transformContentWithMeta($paginator, $userId)
+{
+    $paginator->getCollection()->transform(function ($item) use ($userId) {
+        // like_status (has current user liked this content?)
+        $item->like_status = $item->likes->where('user_id', $userId)->isNotEmpty();
 
+        // authenticate stats
+        $authentications = ContentReaction::where('content_id', $item->id)
+            ->where('reaction_type', 'authenticate')
+            ->get();
+
+        $totalAuthenticated = $authentications->count();
+        $averageScore = $totalAuthenticated > 0
+            ? round($authentications->avg('score'), 2)
+            : 0.0;
+
+        $item->authenticate = [
+            'total_authenticated' => $totalAuthenticated,
+            'average_score'       => $averageScore,
+        ];
+
+        return $item;
+    });
+
+    return $paginator;
+}
 
     public function giveFireOnContent(Request $request)
     {
