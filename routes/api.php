@@ -5,6 +5,7 @@ use App\Http\Controllers\UserSignupController;
 use App\Http\Controllers\ContentImagesController;
 use App\Http\Controllers\AddFlagOnContentController;
 use App\Http\Controllers\UserLoginController;
+use App\Http\Controllers\VibeRoomParticipantController;
 use App\Http\Controllers\LifeEventController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,7 @@ use App\Http\Controllers\ProfileImageController;
 use App\Http\Controllers\IconController;
 use App\Http\Controllers\PushNotificationController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VibeRoomMessageController;
 use App\Http\Controllers\HarmonyOfLifeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ContentLikeController;
@@ -22,6 +24,8 @@ use App\Http\Controllers\FriendRequestController;
 use App\Http\Controllers\BadgesController;
 use App\Http\Controllers\AnswersSkillController;
 use App\Http\Controllers\QuestionsSkillController;
+use App\Http\Controllers\MoodMasterController;
+use App\Http\Controllers\VibeRoomController;
 // --------------- User Authentication Module ---------------
 
 // User signup route
@@ -214,4 +218,72 @@ Route::prefix('skill-connect')->group(function () {
     Route::post('/add-answers', [AnswersSkillController::class, 'store']);      // Add answer
     Route::post('/update-answers/{id}', [AnswersSkillController::class, 'update']); // Update answer
     Route::get('/delete-answers/{id}', [AnswersSkillController::class, 'destroy']); // Delete answer
+});
+
+Route::prefix('moods')->group(function () {
+    Route::get('/', [MoodMasterController::class, 'index']);
+    Route::get('/active', [MoodMasterController::class, 'active']);
+    Route::post('/', [MoodMasterController::class, 'store']);
+    Route::get('/{id}', [MoodMasterController::class, 'show']);
+    Route::put('/{id}', [MoodMasterController::class, 'update']);
+    Route::delete('/{id}', [MoodMasterController::class, 'destroy']);
+});
+
+
+
+Route::prefix('vibe-room')->group(function () {
+    Route::post('create', [VibeRoomController::class, 'create']);
+    Route::get('active', [VibeRoomController::class, 'allActiveRooms']);
+    Route::get('host/{id}', [VibeRoomController::class, 'hostRooms']);
+    Route::get('show/{id}', [VibeRoomController::class, 'show']);
+    Route::post('update/{id}', [VibeRoomController::class, 'update']);
+    Route::post('close/{id}', [VibeRoomController::class, 'closeRoom']);
+    Route::delete('delete/{id}', [VibeRoomController::class, 'delete']);
+});
+
+
+
+
+
+// Vibe Room Participant Routes
+Route::prefix('vibe/participant')->group(function () {
+
+    Route::post('/join', [VibeRoomParticipantController::class, 'joinRoom']);
+    Route::post('/leave', [VibeRoomParticipantController::class, 'leaveRoom']);
+
+    Route::post('/toggle-anonymous', [VibeRoomParticipantController::class, 'toggleAnonymous']);
+    Route::post('/reveal', [VibeRoomParticipantController::class, 'revealIdentity']);
+
+    Route::post('/guess', [VibeRoomParticipantController::class, 'guessIdentity']);
+
+    Route::post('/kick', [VibeRoomParticipantController::class, 'kickParticipant']);
+
+    Route::get('/list/{roomId}', [VibeRoomParticipantController::class, 'roomParticipants']);
+});
+
+
+
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Get messages
+    Route::get('vibe-room/{roomId}/messages', [VibeRoomMessageController::class, 'getRoomMessages']);
+
+    // Send message
+    Route::post('vibe-room/message', [VibeRoomMessageController::class, 'sendMessage']);
+
+    // Reactions
+    Route::post('vibe-room/message/{id}/reaction', [VibeRoomMessageController::class, 'addReaction']);
+
+    // Guess identity
+    Route::post('vibe-room/message/{id}/guess', [VibeRoomMessageController::class, 'guessIdentity']);
+
+    // Reveal identity
+    Route::post('vibe-room/message/{id}/reveal', [VibeRoomMessageController::class, 'revealYourIdentity']);
+
+    // Flag
+    Route::post('vibe-room/message/{id}/flag', [VibeRoomMessageController::class, 'flagMessage']);
+
+    // Hide (host only)
+    Route::post('vibe-room/message/{id}/hide', [VibeRoomMessageController::class, 'hideMessage']);
 });
