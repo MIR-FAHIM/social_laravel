@@ -14,8 +14,10 @@ class VibeRoomParticipantController extends Controller
     | 1. Join a Vibe Room
     |--------------------------------------------------------------------------
     */
-    public function joinRoom(Request $request)
-    {
+public function joinRoom(Request $request)
+{
+    try {
+        // Validate request
         $validator = Validator::make($request->all(), [
             'vibe_room_id' => 'required|exists:vibe_rooms,id',
             'user_id'      => 'required|integer',
@@ -23,7 +25,10 @@ class VibeRoomParticipantController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         // Prevent duplicate join
@@ -33,22 +38,40 @@ class VibeRoomParticipantController extends Controller
         ])->first();
 
         if ($exists) {
-            return response()->json(['status' => true, 'message' => 'Already joined', 'data' => $exists]);
+            return response()->json([
+                'status' => true,
+                'message' => 'Already joined',
+                'data' => $exists
+            ]);
         }
 
+        // Create participant record
         $participant = VibeRoomParticipant::create([
             'vibe_room_id' => $request->vibe_room_id,
             'user_id'      => $request->user_id,
             'role'         => 'guest',
-            'is_anonymous' => $request->is_anonymous ?? true, // default anonymous
+            'is_anonymous' => $request->is_anonymous ?? true,
             'guess_progress' => 0,
             'is_kicked' => false,
             'is_banned' => false,
-           // 'last_active_at' => now(),
         ]);
 
-        return response()->json(['status' => true, 'message' => 'Joined room', 'data' => $participant]);
+        return response()->json([
+            'status' => true,
+            'message' => 'Joined room',
+            'data' => $participant
+        ]);
+
+    } catch (\Exception $e) {
+        // Catch any unexpected errors
+        return response()->json([
+            'status' => false,
+            'message' => 'Something went wrong.',
+            'error' => $e->getMessage() // optional: remove in production
+        ], 500);
     }
+}
+
 
     /*
     |--------------------------------------------------------------------------
