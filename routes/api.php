@@ -267,7 +267,7 @@ Route::prefix('vibe/participant')->group(function () {
 Route::prefix('vibe-message')->group(function () {
 
     // Get messages
-    Route::get('vibe-room/{roomId}/messages', [VibeRoomMessageController::class, 'getRoomMessages']);
+    Route::get('vibe-room/messages/{roomId}', [VibeRoomMessageController::class, 'getRoomMessages']);
 
     // Send message
     Route::post('vibe-room/message', [VibeRoomMessageController::class, 'sendMessage']);
