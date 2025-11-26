@@ -221,12 +221,12 @@ Route::prefix('skill-connect')->group(function () {
 });
 
 Route::prefix('moods')->group(function () {
-    Route::get('/', [MoodMasterController::class, 'index']);
+    Route::get('/get-moods', [MoodMasterController::class, 'index']);
     Route::get('/active', [MoodMasterController::class, 'active']);
-    Route::post('/', [MoodMasterController::class, 'store']);
+    Route::post('/add-mood', [MoodMasterController::class, 'store']);
     Route::get('/{id}', [MoodMasterController::class, 'show']);
-    Route::put('/{id}', [MoodMasterController::class, 'update']);
-    Route::delete('/{id}', [MoodMasterController::class, 'destroy']);
+    Route::put('/update-mood/{id}', [MoodMasterController::class, 'update']);
+    Route::delete('/delete-mood/{id}', [MoodMasterController::class, 'destroy']);
 });
 
 
@@ -264,7 +264,7 @@ Route::prefix('vibe/participant')->group(function () {
 
 
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::prefix('vibe-message')->group(function () {
 
     // Get messages
     Route::get('vibe-room/{roomId}/messages', [VibeRoomMessageController::class, 'getRoomMessages']);
