@@ -44,7 +44,7 @@ class VibeRoomParticipantController extends Controller
             'guess_progress' => 0,
             'is_kicked' => false,
             'is_banned' => false,
-            'last_active_at' => now(),
+           // 'last_active_at' => now(),
         ]);
 
         return response()->json(['status' => true, 'message' => 'Joined room', 'data' => $participant]);
