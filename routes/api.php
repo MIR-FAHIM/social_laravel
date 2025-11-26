@@ -273,17 +273,17 @@ Route::prefix('vibe-message')->group(function () {
     Route::post('vibe-room/message', [VibeRoomMessageController::class, 'sendMessage']);
 
     // Reactions
-    Route::post('vibe-room/message/{id}/reaction', [VibeRoomMessageController::class, 'addReaction']);
+    Route::post('vibe-room/message/reaction/{id}', [VibeRoomMessageController::class, 'addReaction']);
 
     // Guess identity
-    Route::post('vibe-room/message/{id}/guess', [VibeRoomMessageController::class, 'guessIdentity']);
+    Route::post('vibe-room/message/guess/{id}', [VibeRoomMessageController::class, 'guessIdentity']);
 
     // Reveal identity
-    Route::post('vibe-room/message/{id}/reveal', [VibeRoomMessageController::class, 'revealYourIdentity']);
+    Route::post('vibe-room/message/reveal/{id}', [VibeRoomMessageController::class, 'revealYourIdentity']);
 
     // Flag
-    Route::post('vibe-room/message/{id}/flag', [VibeRoomMessageController::class, 'flagMessage']);
+    Route::post('vibe-room/message/flag/{id}', [VibeRoomMessageController::class, 'flagMessage']);
 
     // Hide (host only)
-    Route::post('vibe-room/message/{id}/hide', [VibeRoomMessageController::class, 'hideMessage']);
+    Route::post('vibe-room/message/hide/{id}', [VibeRoomMessageController::class, 'hideMessage']);
 });
