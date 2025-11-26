@@ -49,7 +49,7 @@ public function joinRoom(Request $request)
         $participant = VibeRoomParticipant::create([
             'vibe_room_id' => $request->vibe_room_id,
             'user_id'      => $request->user_id,
-            'role'         => 'guest',
+            'role'         => 'participant',
             'is_anonymous' => $request->is_anonymous ?? true,
             'guess_progress' => 0,
             'is_kicked' => false,
