@@ -56,7 +56,7 @@ class VibeRoomController extends Controller
      */
     public function allActiveRooms()
     {
-        $rooms = VibeRoom::active()->with(['host', 'mood'])->orderBy('id', 'desc')->get();
+        $rooms = VibeRoom::where('is_active', 1)->with(['host', 'mood'])->orderBy('id', 'desc')->get();
 
         return response()->json([
             'status' => true,
