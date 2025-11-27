@@ -84,7 +84,7 @@ class VibeRoomController extends Controller
      */
     public function show($id)
     {
-        $room = VibeRoom::with(['host', 'mood', 'participants'])->find($id);
+        $room = VibeRoom::with(['host', 'mood',])->find($id);
 
         if (!$room) {
             return response()->json([
