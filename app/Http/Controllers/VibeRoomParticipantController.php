@@ -202,12 +202,24 @@ public function joinRoom(Request $request)
     | 7. List Participants
     |--------------------------------------------------------------------------
     */
-    public function roomParticipants($roomId)
-    {
+public function roomParticipants($roomId)
+{
+    try {
         $list = VibeRoomParticipant::where('vibe_room_id', $roomId)
             ->with('user:id,name,profile_pic')
             ->get();
 
-        return response()->json(['status' => true, 'data' => $list]);
+        return response()->json([
+            'status' => true,
+            'data'   => $list
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'Failed to fetch room participants.',
+            'error'   => $e->getMessage()
+        ], 500);
     }
+}
 }
