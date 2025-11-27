@@ -206,7 +206,7 @@ public function roomParticipants($roomId)
 {
     try {
         $list = VibeRoomParticipant::where('vibe_room_id', $roomId)
-            ->with('user:id,name,profile_pic')
+            ->with('user:id,name,profile_photo_path')
             ->get();
 
         return response()->json([
