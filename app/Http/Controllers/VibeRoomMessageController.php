@@ -21,7 +21,7 @@ class VibeRoomMessageController extends Controller
             return response()->json(['error' => 'Room not found'], 404);
         }
 
-        $messages = VibeRoomMessage::where('vibe_room_id', $roomId)
+        $messages = VibeRoomMessage::where('vibe_room_id', $roomId)->with(['sender', 'participant'])
             ->orderBy('id', 'asc')
             ->get();
 
