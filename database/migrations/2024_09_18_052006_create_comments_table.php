@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('post_content_id');
             $table->text('comment');
             $table->enum('comment_type', ['comment', 'debate']);
-            $table->enum('color', ['green', 'blue'])->nullable();
+            $table->enum('color', ['green', 'red', 'grey'])->nullable();
             $table->enum('status', ['approved', 'pending', 'rejected']);
             $table->timestamps();
             

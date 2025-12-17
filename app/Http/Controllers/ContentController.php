@@ -99,7 +99,32 @@ public function getAllContent(Request $request)
         ], 500);
     }
 }
+public function getContentByUser(Request $request)
+{
+    try {
+        $userId = $request->input('user_id');      // current viewer
+        $ownerId = $request->input('owner_id');    // whose content you are fetching (better to separate)
 
+        $perPage = $request->input('per_page', 15);
+
+        $content = Content::with(['user', 'likes'])
+            ->where('user_id', $ownerId)          // previously: $request->user_id
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        $content = $this->transformContentWithMeta($content, $userId);
+
+        return response()->json([
+            "status" => 200,
+            "data"   => $content,
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json([
+            'error'   => 'An unexpected error occurred',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+}
     public function getAuthorWritingContent(Request $request)
     {
         try {
@@ -279,32 +304,7 @@ public function getAllContent(Request $request)
         }
     }
 
-public function getContentByUser(Request $request)
-{
-    try {
-        $userId = $request->input('user_id');      // current viewer
-        $ownerId = $request->input('owner_id');    // whose content you are fetching (better to separate)
 
-        $perPage = $request->input('per_page', 15);
-
-        $content = Content::with(['user', 'likes'])
-            ->where('user_id', $ownerId)          // previously: $request->user_id
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
-
-        $content = $this->transformContentWithMeta($content, $userId);
-
-        return response()->json([
-            "status" => 200,
-            "data"   => $content,
-        ], 200);
-    } catch (Exception $e) {
-        return response()->json([
-            'error'   => 'An unexpected error occurred',
-            'message' => $e->getMessage(),
-        ], 500);
-    }
-}
 
 private function transformContentWithMeta($paginator, $userId)
 {
