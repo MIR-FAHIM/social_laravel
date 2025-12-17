@@ -43,7 +43,7 @@ class CommentController extends Controller
 
         if ($isDebate && $request->comment_type === 'debate') {
             // Ensure color is valid for debate discussions
-            if (!in_array($request->color, ['green', 'blue'])) {
+            if (!in_array($request->color, ['green', 'red', 'neutral'])) {
                 return response()->json([
                     'message' => 'Invalid color for a debate discussion.',
                 ], 400);
