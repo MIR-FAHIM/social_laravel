@@ -64,6 +64,7 @@ Route::post('/post_content', [ContentController::class, 'postContent']);
 Route::post('/update-content/{id}', [ContentController::class, 'updateContent']);
 Route::post('/giveFireOnContent', [ContentController::class, 'giveFireOnContent']);
 Route::post('/updateAuthorWrittingStatus', [ContentController::class, 'updateAuthorWritingStatus']);
+Route::post('/require-authenticity', [ContentController::class, 'requireAuthenticity']);
 
 // Get all content (pagination might be needed)
 Route::get('/content', [ContentController::class, 'getAllContent']);

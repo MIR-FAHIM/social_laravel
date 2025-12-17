@@ -559,6 +559,54 @@ private function transformContentWithMeta($paginator, $userId)
         }
     }
 
+    public function requireAuthenticity(Request $request, $id)
+    {
+        try {
+            // Validate request
+            $validator = Validator::make($request->all(), [
+                'user_id'         => 'required|exists:users,id',
+                'is_authenticated' => 'required|boolean',
+            ]);
+
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            }
+
+            // Load content or 404
+            $content = Content::findOrFail($id);
+
+          
+           
+            // Update is_authenticated field
+            $content->is_authenticated = (bool) $request->input('is_authenticated');
+            $content->save();
+
+            return response()->json([
+                'status'  => 200,
+                'message' => 'Content authenticated status updated successfully',
+                'content' => $content,
+            ], 200);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status'  => 422,
+                'error'   => 'Validation failed',
+                'message' => $e->errors(),
+            ], 422);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status'  => 404,
+                'error'   => 'Not Found',
+                'message' => 'Content not found',
+            ], 404);
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => 500,
+                'error'   => 'An unexpected error occurred',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
 
     public function giveAuthenticity(Request $request)
