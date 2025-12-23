@@ -278,6 +278,70 @@ public function findFriends(Request $request)
         ], 500);
     }
 }
+public function checkFriendStatus(Request $request)
+{
+    try {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'other_user_id' => 'required|exists:users,id',
+        ]);
+
+        $userId = (int) $request->input('user_id');
+        $otherId = (int) $request->input('other_user_id');
+
+        // Check if a friendship record exists (either direction)
+        $friendship = Friendship::where(function ($q) use ($userId, $otherId) {
+            $q->where('sender_id', $userId)->where('receiver_id', $otherId);
+        })->orWhere(function ($q) use ($userId, $otherId) {
+            $q->where('sender_id', $otherId)->where('receiver_id', $userId);
+        })->first();
+
+        $isFriend = (bool) $friendship;
+
+        // Check for any friend request between the two users (most recent)
+        $friendRequest = FriendRequest::where(function ($q) use ($userId, $otherId) {
+            $q->where('sender_id', $userId)->where('receiver_id', $otherId);
+        })->orWhere(function ($q) use ($userId, $otherId) {
+            $q->where('sender_id', $otherId)->where('receiver_id', $userId);
+        })->orderBy('created_at', 'desc')->first();
+
+        $requestStatus = 'none';
+        $pendingDirection = null;
+        $friendRequestId = null;
+
+        if ($friendRequest) {
+            $friendRequestId = $friendRequest->id;
+            if ($friendRequest->status === 'pending') {
+                $requestStatus = 'pending';
+                $pendingDirection = $friendRequest->sender_id == $userId ? 'sent' : 'received';
+            } elseif ($friendRequest->status === 'accepted') {
+                $requestStatus = 'accepted';
+            } elseif ($friendRequest->status === 'declined') {
+                $requestStatus = 'declined';
+            }
+        } elseif ($isFriend) {
+            $requestStatus = 'accepted';
+        }
+
+        return response()->json([
+            'status' => 200,
+            'data' => [
+                'is_friend' => $isFriend,
+                'friendship_id' => $friendship->id ?? null,
+                'request_status' => $requestStatus,
+                'pending_direction' => $pendingDirection,
+                'friend_request_id' => $friendRequestId,
+            ],
+            'message' => 'Friend status retrieved'
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 500,
+            'message' => 'An error occurred while checking friend status',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 public function recommendFriends(Request $request)
 {
     $request->validate([

@@ -50,6 +50,7 @@ Route::post('/friend-request/accept', [FriendRequestController::class, 'acceptFr
 
 // Find friends based on search term (name, email, or mobile)
 Route::post('/find-friends', [FriendRequestController::class, 'findFriends']);
+Route::post('/friend-status', [FriendRequestController::class, 'checkFriendStatus']);
 
 // Get the list of all friends for a specific user
 Route::get('/getFriendShipList', [FriendRequestController::class, 'getFriendshipListByUserId']);
