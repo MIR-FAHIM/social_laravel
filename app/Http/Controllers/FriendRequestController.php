@@ -305,7 +305,7 @@ public function checkFriendStatus(Request $request)
             $q->where('sender_id', $otherId)->where('receiver_id', $userId);
         })->orderBy('created_at', 'desc')->first();
 
-        $requestStatus = 'none';
+        $requestStatus = 'Add Friend';
         $pendingDirection = null;
         $friendRequestId = null;
 
