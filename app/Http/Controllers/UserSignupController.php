@@ -27,6 +27,7 @@ class UserSignupController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'profile_photo_path' => $request->profile_photo_url,
             'password' => Hash::make($request->password),
             // Set default values for other fields if needed
         ]);
