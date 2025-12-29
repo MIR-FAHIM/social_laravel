@@ -31,7 +31,9 @@ public function login(Request $request)
 
     // If user is not found
     if (!$user) {
-        return response()->json(['error' => 'Invalid email or password.'], 401);
+        return response()->json([
+            'status' => 'failed',
+            'message' => 'Not Registered'], 401);
     }
 
     // Check if the password matches
