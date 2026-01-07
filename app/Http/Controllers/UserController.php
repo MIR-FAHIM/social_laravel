@@ -95,6 +95,7 @@ class UserController extends Controller
             $exists = $query->exists();
 
             return response()->json([
+                  'status' => 200,
                 'exists' => $exists
             ], 200);
 
