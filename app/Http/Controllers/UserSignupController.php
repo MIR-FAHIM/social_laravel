@@ -28,7 +28,7 @@ class UserSignupController extends Controller
             'name' => $request->name,
             'mobile' => $request->mobile,
             'email' => $request->email,
-            'profile_photo_path' => $request->profile_photo_url,
+            'profile_photo_path' => $request->filled('profile_photo_url') && $request->profile_photo_url ? $request->profile_photo_url : 'https://avatar.iran.liara.run/public/49',
             'password' => Hash::make($request->password),
             // Set default values for other fields if needed
         ]);
