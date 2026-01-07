@@ -26,6 +26,7 @@ class UserSignupController extends Controller
         // Create the user
         $user = User::create([
             'name' => $request->name,
+            'mobile' => $request->mobile,
             'email' => $request->email,
             'profile_photo_path' => $request->profile_photo_url,
             'password' => Hash::make($request->password),
