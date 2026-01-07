@@ -87,7 +87,7 @@ class UserController extends Controller
 
             $phone = $request->input('phone');
 
-            $query = User::where('phone', $phone);
+            $query = User::where('mobile', $phone);
             if ($request->filled('exclude_user_id')) {
                 $query->where('id', '!=', $request->input('exclude_user_id'));
             }
