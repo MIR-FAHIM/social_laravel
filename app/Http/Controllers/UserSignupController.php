@@ -28,7 +28,7 @@ class UserSignupController extends Controller
         if ($request->filled('profile_photo_url') && $request->profile_photo_url) {
             $pp = $request->profile_photo_url;
             if (strpos($pp, 'http') === 0) {
-                $profilePhoto = $pp;
+                $profilePhoto = 'https://socialmedia.biswasandbrothers.com/storage/app/public/' . ltrim($pp, '/');
             } else {
                 $profilePhoto = 'https://socialmedia.biswasandbrothers.com/storage/app/public/' . ltrim($pp, '/');
             }
