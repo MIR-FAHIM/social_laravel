@@ -39,18 +39,22 @@ public function uploadProfileImages(Request $request)
         $fileName = "{$userName}_{$user_id}_{$random}.{$extension}";
 
         // Save image in storage/app/public/profile_images
-        $path = $image->storeAs('profile_images', $fileName, 'public');
- if ($request-> is_default == 1) {
-        $user ->profile_photo_path = $path;
-        $user->save();
-    }
-        // Store record in DB
-       ProfileImage::create([
-            'user_id'    => $user_id,
-            'image_path' => $path,
-            'is_default'    => $request->is_default ?? 0,
-            'serial'     => $existingImagesCount + $index + 1,
-        ]);
+                $path = $image->storeAs('profile_images', $fileName, 'public');
+                $fullUrl = 'https://socialmedia.biswasandbrothers.com/storage/app/public/' . ltrim($path, '/');
+
+                // If this image is marked default, update user's profile_photo_path with full URL
+                if (($request->is_default ?? 0) == 1) {
+                    $user->profile_photo_path = $fullUrl;
+                    $user->save();
+                }
+
+                // Store record in DB (store full URL so consumers get full path)
+               ProfileImage::create([
+                    'user_id'    => $user_id,
+                    'image_path' => $fullUrl,
+                    'is_default'    => $request->is_default ?? 0,
+                    'serial'     => $existingImagesCount + $index + 1,
+                ]);
     }
 
     return response()->json([
