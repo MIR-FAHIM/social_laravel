@@ -23,12 +23,23 @@ class UserSignupController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Determine profile photo path (use provided URL/path or default)
+        $profilePhoto = 'https://avatar.iran.liara.run/public/49';
+        if ($request->filled('profile_photo_url') && $request->profile_photo_url) {
+            $pp = $request->profile_photo_url;
+            if (strpos($pp, 'http') === 0) {
+                $profilePhoto = $pp;
+            } else {
+                $profilePhoto = 'https://socialmedia.biswasandbrothers.com/storage/app/public/' . ltrim($pp, '/');
+            }
+        }
+
         // Create the user
         $user = User::create([
             'name' => $request->name,
             'mobile' => $request->mobile,
             'email' => $request->email,
-            'profile_photo_path' => $request->filled('profile_photo_url') && $request->profile_photo_url ? $request->profile_photo_url : 'https://avatar.iran.liara.run/public/49',
+            'profile_photo_path' => $profilePhoto,
             'password' => Hash::make($request->password),
             // Set default values for other fields if needed
         ]);
