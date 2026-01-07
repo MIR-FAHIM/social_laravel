@@ -36,6 +36,8 @@ Route::post('/login', [UserLoginController::class, 'login']);
 
 // User profile route
 Route::get('/profile/{id}', [UserController::class, 'getProfile']);
+// Check whether a user phone/number exists
+Route::post('/user/number-exists', [UserController::class, 'numberExists']);
 
 // --------------- Friendship Module ---------------
 

@@ -76,4 +76,39 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function numberExists(Request $request)
+    {
+        try {
+            $request->validate([
+                'phone' => 'required|string',
+                'exclude_user_id' => 'nullable|integer',
+            ]);
+
+            $phone = $request->input('phone');
+
+            $query = User::where('phone', $phone);
+            if ($request->filled('exclude_user_id')) {
+                $query->where('id', '!=', $request->input('exclude_user_id'));
+            }
+
+            $exists = $query->exists();
+
+            return response()->json([
+                'exists' => $exists
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 422,
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'An error occurred',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
