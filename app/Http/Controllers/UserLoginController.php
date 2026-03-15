@@ -13,11 +13,10 @@ class UserLoginController extends Controller
 
 
 public function login(Request $request)
-
-   {
-    // Validate the input
+{
+    // Validate input
     $validator = Validator::make($request->all(), [
-        'email' => 'required|email',
+        'email' => 'required|string',
         'password' => 'required|string',
         'fcm_token' => 'required|string',
     ]);
@@ -26,33 +25,39 @@ public function login(Request $request)
         return response()->json(['errors' => $validator->errors()], 422);
     }
 
-    // Find the user by email
-    $user = User::where('email', $request->email)->first();
+    $loginInput = $request->email;
 
-    // If user is not found
+    // Detect if input is mobile number (11 digits)
+    if (preg_match('/^[0-9]{11}$/', $loginInput)) {
+        $user = User::where('mobile', $loginInput)->first();
+    } else {
+        $user = User::where('email', $loginInput)->first();
+    }
+
+    // User not found
     if (!$user) {
         return response()->json([
             'status' => 'failed',
-            'message' => 'Not Registered'], 401);
+            'message' => 'Not Registered'
+        ], 401);
     }
 
-    // Check if the password matches
-    
+    // Check password
     if (Hash::check($request->password, $user->password)) {
-        // Return success response
+
         $user->fcm_token = $request->fcm_token;
         $user->save();
 
         return response()->json([
             'status' => 200,
-          
             'message' => 'Logged in successfully.',
             'user' => $user
         ], 200);
-    } else {
-        // If password does not match
-        return response()->json(['error' => 'Invalid email or password.'], 401);
-    }
 
+    } else {
+        return response()->json([
+            'error' => 'Invalid email/mobile or password.'
+        ], 401);
+    }
 }
 }
