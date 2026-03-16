@@ -351,7 +351,7 @@ public function recommendFriends(Request $request)
     try {
         $userId = (int) $request->input('user_id');
 
-        // 1) Current friends of the user (pluck only the other side)
+        // 1) Current friends of the user
         $friends = Friendship::query()
             ->where(function ($q) use ($userId) {
                 $q->where('sender_id', $userId)
@@ -364,11 +364,9 @@ public function recommendFriends(Request $request)
             ->unique()
             ->values();
 
-        // Early out: if user has no friends, you might recommend popular/nearby users instead.
-        // For now we’ll still try friends-of-friends; result may be empty.
         $friendIds = $friends->all();
 
-        // 2) Edges that touch any of my friends
+        // 2) Edges touching any of my friends
         $fofEdges = Friendship::query()
             ->where(function ($q) use ($friendIds) {
                 $q->whereIn('sender_id', $friendIds)
@@ -376,10 +374,8 @@ public function recommendFriends(Request $request)
             })
             ->get();
 
-        // 3) Reduce edges to candidate IDs (the “other endpoint”), exclude me and my current friends
-        $candidates = $fofEdges->map(function ($f) use ($userId) {
-                // Pick the "other" node with respect to neither being $userId necessarily
-                // We’ll normalize below anyway; this map just collects both ends.
+        // 3) Candidate IDs from friends-of-friends
+        $candidates = $fofEdges->map(function ($f) {
                 return [$f->sender_id, $f->receiver_id];
             })
             ->flatten()
@@ -387,21 +383,69 @@ public function recommendFriends(Request $request)
                 return $id == $userId || in_array($id, $friendIds, true);
             });
 
-
         $ranked = $candidates->countBy()->sortDesc();
 
         // Top 15 candidate user IDs by mutual-count
         $candidateIds = $ranked->keys()->take(15)->values();
 
+        // 4) Fallback: if no recommendation found, return all users except him and existing friends
         if ($candidateIds->isEmpty()) {
+            $fallbackUsers = User::query()
+                ->where('id', '!=', $userId)
+                ->whereNotIn('id', $friendIds)
+                ->latest()
+                ->take(15)
+                ->get();
+
+            if ($fallbackUsers->isEmpty()) {
+                return response()->json([
+                    'status'  => 200,
+                    'data'    => [],
+                    'message' => 'No users found',
+                ], 200);
+            }
+
+            $fallbackIds = $fallbackUsers->pluck('id');
+
+            $pendingRequests = FriendRequest::query()
+                ->where('status', 'pending')
+                ->where(function ($q) use ($userId, $fallbackIds) {
+                    $q->where(function ($q2) use ($userId, $fallbackIds) {
+                        $q2->where('sender_id', $userId)
+                           ->whereIn('receiver_id', $fallbackIds);
+                    })->orWhere(function ($q2) use ($userId, $fallbackIds) {
+                        $q2->whereIn('sender_id', $fallbackIds)
+                           ->where('receiver_id', $userId);
+                    });
+                })
+                ->get();
+
+            $isRequestedMap = [];
+            foreach ($pendingRequests as $r) {
+                $otherId = $r->sender_id == $userId ? $r->receiver_id : $r->sender_id;
+                $isRequestedMap[$otherId] = true;
+            }
+
+            $result = $fallbackUsers->map(function (User $u) use ($isRequestedMap) {
+                return [
+                    'user_id'      => $u->id,
+                    'name'         => $u->name,
+                    'image'        => $u->profile_photo_path,
+                    'email'        => $u->email,
+                    'mobile'       => $u->mobile,
+                    'is_friend'    => false,
+                    'is_requested' => (bool) ($isRequestedMap[$u->id] ?? false),
+                ];
+            });
+
             return response()->json([
                 'status'  => 200,
-                'data'    => [],
-                'message' => 'No recommendations at this time',
+                'data'    => $result,
+                'message' => 'Fallback user list found successfully',
             ], 200);
         }
 
-        // 5) Fetch pending friend-requests between me and candidates (either direction)
+        // 5) Pending friend requests with recommended candidates
         $pendingRequests = FriendRequest::query()
             ->where('status', 'pending')
             ->where(function ($q) use ($userId, $candidateIds) {
@@ -415,18 +459,16 @@ public function recommendFriends(Request $request)
             })
             ->get();
 
-        // Build a quick lookup: candidateId => true if there’s a pending request either way
         $isRequestedMap = [];
         foreach ($pendingRequests as $r) {
             $otherId = $r->sender_id == $userId ? $r->receiver_id : $r->sender_id;
             $isRequestedMap[$otherId] = true;
         }
 
-        // 6) Pull user profiles in one shot
+        // 6) Pull user profiles in ranking order
         $users = User::query()
             ->whereIn('id', $candidateIds)
             ->get()
-            // preserve the ranking order (sort by mutual-count desc using $ranked)
             ->sortByDesc(fn ($u) => $ranked->get($u->id, 0))
             ->values();
 
@@ -438,8 +480,8 @@ public function recommendFriends(Request $request)
                 'image'        => $u->profile_photo_path,
                 'email'        => $u->email,
                 'mobile'       => $u->mobile,
-                'is_friend'    => false,                              // by construction
-                'is_requested' => (bool)($isRequestedMap[$u->id] ?? false), // pending either direction
+                'is_friend'    => false,
+                'is_requested' => (bool) ($isRequestedMap[$u->id] ?? false),
             ];
         });
 
